@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CiteAirgap — verifiable on-prem AI</title>
-<meta name="description" content="CiteAirgap is an on-premise AI assistant that answers questions from your own documents, verifies every claim against the source, and never sends data outside your network.">
-<script>try{var t=localStorage.getItem("citeairgap-theme");if(t==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
+<title>CiteAirgap — AI answers you can prove</title>
+<meta name="description" content="Private AI that answers from your own documents, checks every claim against the source, and never leaves your network.">
+<script>try{if(localStorage.getItem("citeairgap-theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
 <style>
 :root{
   --bg:#0b0d0c;--bg2:#101312;--panel:#131716;--line:#232a27;--line2:#2f3833;
@@ -13,11 +13,9 @@
   --green:#4ade80;--amber:#fbbf24;--red:#f87171;--cyan:#67e8f9;--violet:#c4b5fd;
   --hl:#3b3207;--hl-ink:#fde68a;--hl-line:#6b5a10;
   --on-green:#052e16;--green-hi:#86efac;--gbg:#0f1d16;--gline:#1f4d33;--gink:#8fdcae;
-  --hover:#18201c;--sel:#16201b;--selbg:#1f3b2c;
   --sbg:#0f2a1c;--sline:#1d4a32;--topbg:rgba(16,19,18,.92);
-  --shadow:rgba(0,0,0,.8);--glow:rgba(74,222,128,.07);
+  --shadow:rgba(0,0,0,.8);--glow:rgba(74,222,128,.08);
   --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
-  --max:1180px;
   color-scheme:dark;
 }
 :root[data-theme="light"]{
@@ -26,565 +24,280 @@
   --green:#15803d;--amber:#b45309;--red:#dc2626;--cyan:#0e7490;--violet:#6d28d9;
   --hl:#fef3c7;--hl-ink:#713f12;--hl-line:#f59e0b;
   --on-green:#ffffff;--green-hi:#166534;--gbg:#ecf7f0;--gline:#9fd5b3;--gink:#166534;
-  --hover:#eef1ec;--sel:#e6f3eb;--selbg:#c7ead4;
   --sbg:#dcf1e4;--sline:#a9d9bb;--topbg:rgba(234,236,230,.92);
-  --shadow:rgba(20,40,30,.18);--glow:rgba(21,128,61,.08);
+  --shadow:rgba(20,40,30,.18);--glow:rgba(21,128,61,.09);
   color-scheme:light;
 }
-html{transition:background-color .2s}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:60px}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.65 var(--mono);-webkit-font-smoothing:antialiased;overflow-x:hidden;padding-bottom:24px}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(900px 500px at 80% -10%,var(--glow),transparent 70%)}
-::selection{background:var(--selbg)}
-::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}::-webkit-scrollbar-track{background:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--mono);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(900px 520px at 78% 0%,var(--glow),transparent 70%)}
+::selection{background:var(--gline)}
 a{color:inherit;text-decoration:none}
-h1,h2,h3{margin:0;font-weight:500;color:var(--ink);letter-spacing:-.01em}
+h1,h2,h3{margin:0;font-weight:500;letter-spacing:-.02em}
 p{margin:0}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 24px;position:relative;z-index:1}
-@media (max-width:600px){.wrap{padding:0 16px}body{font-size:13.5px}}
-.g{color:var(--green)}.c{color:var(--cyan)}.v{color:var(--violet)}.d{color:var(--dim)}.f{color:var(--faint)}.r{color:var(--red)}.a{color:var(--amber)}
+.g{color:var(--green)}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px;position:relative}
+@media (max-width:600px){.wrap{padding:0 16px}}
 
-/* ── shared console pieces ── */
-.sect{color:var(--faint);font-size:12px;letter-spacing:.08em;text-transform:lowercase}
-.sect::before{content:"// "}
-.win{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
-.ptitle{display:flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-bottom:1px solid var(--line);color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.1em;background:var(--bg2);white-space:nowrap;overflow:hidden}
-.ptitle::before{content:"▍";color:var(--green)}
-.ptitle .rt{margin-left:auto;text-transform:none;letter-spacing:0;color:var(--faint)}
-.wbody{padding:18px 18px 20px}
-.btn{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font:inherit;font-size:13px;cursor:pointer;color:var(--ink);background:none;border:1px solid var(--line2);border-radius:3px;padding:9px 16px;transition:border-color .15s,color .15s,background .15s}
+/* top bar */
+.top{position:fixed;top:0;left:0;right:0;z-index:20;background:var(--topbg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:14px;height:48px}
+.logo{color:var(--green);font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.logo span{color:var(--dim);font-weight:400}
+.grow{flex:1}
+.stat{white-space:nowrap;color:var(--dim);font-size:11.5px}
+.stat i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);margin-right:6px}
+.stat b{font-weight:500;color:var(--green)}
+@media (max-width:760px){.top .stat{display:none}}
+.btn{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font:inherit;font-size:13px;cursor:pointer;color:var(--ink);background:none;border:1px solid var(--line2);border-radius:3px;padding:10px 18px;transition:border-color .15s,color .15s,background .15s}
 .btn:hover{border-color:var(--green);color:var(--green)}
 .btn.pri{color:var(--on-green);background:var(--green);border-color:var(--green);font-weight:700}
 .btn.pri:hover{background:var(--green-hi);border-color:var(--green-hi);color:var(--on-green)}
-.stat{white-space:nowrap;color:var(--dim);font-size:11.5px}
-.stat i{font-style:normal;display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);margin-right:6px;vertical-align:0}
-.stat b{font-weight:500;color:var(--green)}
-.tag{font-size:10.5px;font-weight:700;padding:0 6px;border-radius:2px;height:fit-content;margin-top:2px;white-space:nowrap}
-.t-ok{color:#052e16;background:#4ade80}.t-ap{color:#3a2600;background:#fbbf24}.t-bad{color:#3b0a0a;background:#f87171}
-mark{background:var(--hl);color:var(--hl-ink);box-shadow:0 0 0 1px var(--hl-line);border-radius:1px}
-.caret{display:inline-block;width:8px;height:15px;background:var(--green);vertical-align:-3px;animation:blink 1.1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-
-/* ── top bar ── */
-header.top{position:sticky;top:0;z-index:30;background:var(--topbg);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.top-in{display:flex;align-items:center;gap:22px;height:48px}
-.logo{color:var(--green);font-weight:700;letter-spacing:.04em;white-space:nowrap}
-.logo span{color:var(--dim);font-weight:400}
-.navl{display:flex;gap:2px;margin-left:8px}
-.navl a{color:var(--dim);font-size:12px;padding:4px 10px;border-radius:3px;text-transform:lowercase}
-.navl a:hover{color:var(--ink);background:var(--panel)}
-.top .grow{flex:1}
 .top .btn{padding:6px 12px;font-size:12px}
-@media (max-width:1000px){.navl,.top .stat{display:none}}
-
-/* ── hero ── */
-.hero{padding:80px 0 88px}
-.hero-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:center}
-.hero-grid>*{min-width:0}
-@media (max-width:980px){.hero-grid{grid-template-columns:1fr}}
-.ascii{color:var(--green);white-space:pre;font-size:12.5px;line-height:1.25;margin:18px 0 22px;opacity:.9}
-@media (max-width:420px){.ascii{font-size:9.5px}}
-.hero h1{font-size:clamp(30px,4.4vw,50px);line-height:1.12;letter-spacing:-.03em}
-.hero h1 .g{display:block}
-.lead{color:var(--ink2);font-size:15px;max-width:60ch;margin-top:22px}
-.ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
-.note{margin-top:18px;font-size:12px;color:var(--faint)}
-.note b{color:var(--dim);font-weight:400}
-
-/* hero console */
-.con{box-shadow:0 30px 80px -30px var(--shadow),0 0 0 1px var(--glow)}
-.con-bar{display:flex;gap:14px;align-items:center;height:30px;padding:0 12px;background:var(--bg2);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap}
-.con-bar .logo{font-size:12px}
-#out{padding:16px 18px;min-height:330px;font-size:12.5px;line-height:1.6}
-@media (max-width:600px){#out{min-height:380px}}
-.q .ps{color:var(--green)}
-.meta{color:var(--dim);font-size:11.5px;margin:2px 0 8px}
-.claim{display:grid;grid-template-columns:auto 1fr;gap:0 10px;padding:7px 0;border-bottom:1px dashed var(--line)}
-.claim:last-child{border-bottom:none}
-.claim.rej .ct{text-decoration:line-through;text-decoration-color:var(--red);color:var(--dim)}
-.cite{color:var(--cyan);font-size:11.5px}
-.why{color:var(--red);font-size:11.5px}
-.chk{color:var(--faint);font-size:11px}.chk b{color:var(--green);font-weight:400}
-.span{margin-top:10px;padding:9px 11px;background:var(--bg);border:1px solid var(--line);border-radius:3px;font-size:11.5px;color:var(--ink2)}
-.span .h{display:block;margin-top:6px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.refusal{color:var(--red);border-left:2px solid var(--red);padding:2px 0 2px 10px;margin:8px 0}
-.fade{animation:fi .35s ease both}@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-.chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-top:1px solid var(--line);background:var(--bg2)}
-.chips button{font:inherit;font-size:11px;cursor:pointer;color:var(--dim);background:none;border:1px solid var(--line);border-radius:3px;padding:3px 8px}
-.chips button:hover{color:var(--ink);border-color:var(--line2)}
-.chips button.on{color:var(--green);border-color:var(--gline);background:var(--gbg)}
-.chips span{color:var(--faint);font-size:11px;padding:3px 2px}
-.prompt{display:flex;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);background:var(--bg2);font-size:12.5px}
-.prompt label{color:var(--green);white-space:nowrap}.prompt label span{color:var(--cyan)}
-.prompt .typed{color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-
-/* ── kv strip ── */
-.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2);position:relative;z-index:1}
-.strip-in{display:grid;grid-template-columns:repeat(4,1fr)}
-.strip-in>div{padding:20px 18px;border-right:1px solid var(--line)}
-.strip-in>div:last-child{border-right:none}
-.strip b{display:block;color:var(--green);font-size:22px;font-weight:500;letter-spacing:-.02em}
-.strip span{color:var(--dim);font-size:12px}
-@media (max-width:860px){.strip-in{grid-template-columns:1fr 1fr}.strip-in>div:nth-child(2){border-right:none}.strip-in>div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
-
-/* ── sections ── */
-section{padding:96px 0;position:relative;z-index:1}
-@media (max-width:700px){section{padding:68px 0}}
-.head{max-width:780px;margin-bottom:44px;display:grid;gap:14px}
-.head h2{font-size:clamp(24px,3vw,34px);line-height:1.25;letter-spacing:-.02em}
-.head p{color:var(--ink2);max-width:68ch}
-
-.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media (max-width:860px){.two{grid-template-columns:1fr}}
-.log{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.log li{display:grid;grid-template-columns:20px 1fr;gap:8px;color:var(--ink2)}
-.log.x li::before{content:"–";color:var(--amber)}
-.log.x li:first-child::before{content:"✓";color:var(--green)}
-.log.o li::before{content:"✓";color:var(--green)}
-.log.o li{color:var(--ink)}
-.win.good{border-color:var(--gline)}
-.win.good .ptitle{background:var(--gbg);color:var(--gink)}
-
-/* pipeline */
-.pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:0;align-items:stretch}
-.stage{border:1px solid var(--line);background:var(--panel);padding:16px 16px 18px;position:relative;margin-right:22px;border-radius:3px}
-.stage:last-child{margin-right:0}
-.stage:not(:last-child)::after{content:"→";position:absolute;right:-19px;top:50%;transform:translateY(-50%);color:var(--green)}
-.stage .n{color:var(--violet);font-size:11px}
-.stage h3{font-size:15px;margin:4px 0 6px;color:var(--cyan)}
-.stage p{font-size:12px;color:var(--dim);line-height:1.55}
-.stage.key{border-color:var(--green);background:var(--gbg)}
-.stage.key h3{color:var(--green)}
-@media (max-width:900px){.pipe{grid-template-columns:1fr;gap:22px}.stage{margin-right:0}.stage:not(:last-child)::after{content:"↓";right:auto;left:20px;top:auto;bottom:-21px;transform:none}}
-.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px}
-@media (max-width:860px){.checks{grid-template-columns:1fr}}
-.checks h3{font-size:14.5px;margin-bottom:6px}
-.checks p{font-size:12.5px;color:var(--ink2)}
-.ex{margin-top:12px;font-size:11.5px;padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:3px}
-
-/* industries */
-.ind{display:grid;grid-template-columns:260px 1fr;min-height:360px}
-@media (max-width:860px){.ind{grid-template-columns:1fr}}
-.ind-list{border-right:1px solid var(--line);background:var(--bg2);padding:6px 0}
-@media (max-width:860px){.ind-list{border-right:none;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;padding:0}}
-.ind-list button{display:block;width:100%;text-align:left;font:inherit;font-size:12.5px;cursor:pointer;color:var(--ink);background:none;border:none;border-left:2px solid transparent;padding:8px 14px;white-space:nowrap}
-.ind-list button .ic{color:var(--faint);margin-right:6px}
-.ind-list button:hover{background:var(--hover)}
-.ind-list button.on{border-left-color:var(--green);background:var(--sel);color:var(--green)}
-.ind-list button.on .ic{color:var(--green)}
-@media (max-width:860px){.ind-list button{width:auto;border-left:none;border-bottom:2px solid transparent}.ind-list button.on{border-bottom-color:var(--green)}}
-.ind-pane{padding:20px 22px}
-.ind-pane h3{font-size:20px;margin-bottom:8px}
-.ind-pane>p{color:var(--ink2);max-width:62ch}
-.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;font-size:12.5px;padding:12px 14px;background:var(--bg);border:1px solid var(--line);border-radius:3px;margin-top:18px}
-.kv dt{color:var(--dim)}.kv dd{margin:0;color:var(--ink)}
-@media (max-width:520px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
-.ind-q{margin-top:14px;font-size:12.5px}
-.ind-q li{list-style:none;padding:2px 0;color:var(--ink2)}
-.ind-q li::before{content:"› ";color:var(--green)}
-.ind-q{padding:0}
-
-/* features */
-.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media (max-width:980px){.feat{grid-template-columns:1fr 1fr}}
-@media (max-width:600px){.feat{grid-template-columns:1fr}}
-.feat .wbody p{color:var(--ink2);font-size:12.5px}
-.feat h3{font-size:14.5px;margin-bottom:8px}
-.feat .badge{display:inline-block;margin-top:14px;padding:1px 8px;border:1px solid currentColor;border-radius:2px;font-size:11px}
-
-/* deploy */
-.dep{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media (max-width:860px){.dep{grid-template-columns:1fr}}
-.dep h3{font-size:17px;margin-bottom:8px}
-.dep p{color:var(--ink2);font-size:12.5px}
-.dep ul{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:4px;font-size:12.5px;color:var(--ink2)}
-.dep li::before{content:"◆ ";color:var(--green)}
-.dep .win.hl{border-color:var(--green)}
-.trace{list-style:none;margin:0;padding:0}
-.trace li{padding:8px 0;display:grid;grid-template-columns:96px 110px 1fr;gap:12px;border-bottom:1px dashed var(--line);font-size:13px}
-.trace li:last-child{border-bottom:none}
-.trace .t{color:var(--faint);text-align:right}
-.trace .a{color:var(--cyan)}
-.trace .dd{color:var(--ink2)}
-@media (max-width:600px){.trace li{grid-template-columns:1fr;gap:0}.trace .t{text-align:left}}
-
-/* faq */
-.faq{display:grid;grid-template-columns:1fr 1.5fr;gap:48px;align-items:start}
-@media (max-width:860px){.faq{grid-template-columns:1fr;gap:28px}}
-details{border-bottom:1px dashed var(--line);padding:14px 0}
-details:first-child{border-top:1px dashed var(--line)}
-summary{list-style:none;cursor:pointer;display:flex;gap:10px;color:var(--ink);font-size:14px}
-summary::-webkit-details-marker{display:none}
-summary::before{content:"▸";color:var(--green);transition:transform .15s;display:inline-block}
-details[open] summary::before{transform:rotate(90deg)}
-summary:hover{color:var(--green)}
-details p{margin:10px 0 0 22px;color:var(--ink2);font-size:13px;max-width:70ch}
-
-/* cta */
-.cta .wbody{padding:40px 36px;display:grid;grid-template-columns:1.4fr 1fr;gap:32px;align-items:center}
-@media (max-width:860px){.cta .wbody{grid-template-columns:1fr;padding:28px 20px}}
-.cta h2{font-size:clamp(22px,2.8vw,30px);line-height:1.3;letter-spacing:-.02em;margin-top:10px}
-.cta p{color:var(--ink2);margin-top:12px}
-.cta .acts{display:grid;gap:10px;justify-items:start}
-.cta small{color:var(--faint);font-size:11.5px}
-
-.foot{padding:28px 0 40px;color:var(--faint);font-size:12px;display:flex;flex-wrap:wrap;gap:10px 24px;position:relative;z-index:1}
-.foot a:hover{color:var(--ink)}
-
-/* status line */
-.status{position:fixed;left:0;right:0;bottom:0;z-index:30;height:24px;display:flex;align-items:center;gap:16px;padding:0 12px;background:var(--sbg);color:var(--gink);font-size:11px;border-top:1px solid var(--sline);overflow:hidden;white-space:nowrap}
-.status .mode{background:var(--green);color:var(--on-green);font-weight:700;padding:0 8px;margin-left:-12px;height:100%;display:flex;align-items:center}
-.status .grow{flex:1}
-@media (max-width:700px){.status .hide-m{display:none}}
-
-.rv{transition:opacity .6s ease,transform .6s ease}
-.js .rv{opacity:0;transform:translateY(10px)}
-.js .rv.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){.js .rv{opacity:1;transform:none;transition:none}.caret{animation:none}.fade{animation:none}html{scroll-behavior:auto}}
-
-/* theme toggle */
-.theme{display:inline-flex;align-items:center;gap:0;font:inherit;font-size:11px;cursor:pointer;background:var(--bg);border:1px solid var(--line2);border-radius:3px;padding:2px;color:var(--dim)}
-.theme span{padding:2px 8px;border-radius:2px;transition:background .15s,color .15s;white-space:nowrap}
+.theme{display:inline-flex;font:inherit;font-size:11px;cursor:pointer;background:var(--bg);border:1px solid var(--line2);border-radius:3px;padding:2px;color:var(--dim)}
+.theme span{padding:2px 8px;border-radius:2px;white-space:nowrap}
 .theme:hover{border-color:var(--green)}
 :root:not([data-theme="light"]) .theme .tn,:root[data-theme="light"] .theme .tl{background:var(--green);color:var(--on-green);font-weight:700}
-@media (max-width:420px){.theme .lbl{display:none}}
+@media (max-width:460px){.theme .lbl{display:none}}
+
+/* screens */
+.screen{min-height:100vh;min-height:100svh;display:flex;align-items:center;padding:88px 0 56px;position:relative}
+.screen>.wrap{width:100%}
+
+/* screen 1 */
+.hero{display:grid;grid-template-columns:.85fr 1.25fr;gap:48px;align-items:center}
+.hero>*{min-width:0}
+@media (max-width:960px){.hero{grid-template-columns:1fr;gap:36px}}
+.kicker{color:var(--faint);font-size:12px;letter-spacing:.06em}
+.kicker::before{content:"// "}
+.offline{display:inline-flex;align-items:center;gap:10px;padding:7px 14px 7px 10px;border:1px solid var(--gline);background:var(--gbg);border-radius:999px;color:var(--green);font-size:13px;font-weight:700}
+.offline svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.offline .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.sub b{color:var(--ink);font-weight:500}
+h1{font-size:clamp(32px,4.4vw,54px);line-height:1.08;margin:18px 0 20px;letter-spacing:-.035em}
+h1 .g{display:block}
+.sub{color:var(--ink2);font-size:16px;max-width:44ch}
+.ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+
+.win{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.con{box-shadow:0 30px 80px -30px var(--shadow)}
+.bar{display:flex;gap:14px;align-items:center;height:30px;padding:0 12px;background:var(--bg2);border-bottom:1px solid var(--line);white-space:nowrap;overflow:hidden;font-size:12px}
+#out{padding:22px 24px;min-height:340px;font-size:14px;line-height:1.65;touch-action:pan-y;user-select:none}
+@media (max-width:600px){#out{min-height:360px;padding:18px 16px;font-size:13px}}
+.span{margin-top:14px;padding:11px 13px;background:var(--bg);border:1px solid var(--line);border-radius:3px;font-size:12px;color:var(--ink2)}
+.span .h{display:block;margin-top:6px;color:var(--faint);font-size:11px}
+mark{background:var(--hl);color:var(--hl-ink);box-shadow:0 0 0 1px var(--hl-line);border-radius:1px}
+.q .ps{color:var(--green)}
+.meta{color:var(--dim);font-size:11.5px;margin:2px 0 10px}
+.claim{display:grid;grid-template-columns:auto 1fr;gap:0 10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.claim:last-child{border-bottom:none}
+.tag{font-size:10.5px;font-weight:700;padding:0 6px;border-radius:2px;height:fit-content;margin-top:2px;white-space:nowrap}
+.t-ok{color:#052e16;background:#4ade80}.t-bad{color:#3b0a0a;background:#f87171}
+.rej .ct{text-decoration:line-through;text-decoration-color:var(--red);color:var(--dim)}
+.cite{color:var(--cyan);font-size:11.5px}
+.why{color:var(--red);font-size:11.5px}
+.refusal{color:var(--red);border-left:2px solid var(--red);padding:2px 0 2px 10px;margin:10px 0}
+.fade{animation:fi .35s ease both}@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.in-r{animation:inr .35s ease both}.in-l{animation:inl .35s ease both}
+@keyframes inr{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes inl{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+.prompt{display:flex;gap:8px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);background:var(--bg2);font-size:12.5px}
+.prompt label{color:var(--green);white-space:nowrap}.prompt label span{color:var(--cyan)}
+.typed{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.caret{display:inline-block;flex:none;width:8px;height:15px;background:var(--green);animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.stage{position:relative}
+.nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:40px;height:64px;display:grid;place-items:center;font:inherit;font-size:22px;line-height:1;cursor:pointer;color:var(--ink);background:var(--panel);border:1px solid var(--line2);border-radius:4px;box-shadow:0 8px 24px -10px var(--shadow);transition:color .15s,border-color .15s,transform .15s}
+.nav:hover{color:var(--green);border-color:var(--green)}
+.nav.prev{left:-20px}.nav.next{right:-20px}
+.nav.prev:active{transform:translate(-2px,-50%)}.nav.next:active{transform:translate(2px,-50%)}
+@media (max-width:1240px){.nav.prev{left:-12px}.nav.next{right:-12px}}
+@media (max-width:600px){.nav{display:none}.hint .desk{display:none}.bar .stat.m{display:none}.offline .more{display:none}}
+@media (min-width:601px){.hint .mob{display:none}}
+.tabs{display:flex;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:11.5px;cursor:pointer;color:var(--dim);background:none;border:1px solid var(--line);border-radius:3px;padding:4px 10px;position:relative;overflow:hidden}
+.tabs button:hover{color:var(--ink);border-color:var(--line2)}
+.tabs button.on{color:var(--green);border-color:var(--gline);background:var(--gbg)}
+.tabs button.on::after{content:"";position:absolute;left:0;bottom:0;height:2px;background:var(--green);width:0}
+.tabs button.on.run::after{animation:prog var(--dur,8s) linear forwards}
+@keyframes prog{to{width:100%}}
+.counter{color:var(--faint);font-size:11.5px}
+.hint{text-align:center;color:var(--faint);font-size:11px;margin-top:8px}
+.scroll-hint{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);color:var(--faint);font-size:11.5px;animation:bob 2s ease-in-out infinite}
+.scroll-hint:hover{color:var(--green)}
+@keyframes bob{50%{transform:translate(-50%,4px)}}
+@media (max-height:700px),(max-width:960px){.scroll-hint{display:none}}
+
+/* screen 2 */
+.s2{border-top:1px solid var(--line);background:var(--bg2)}
+.s2 h2{font-size:clamp(26px,3.4vw,40px);line-height:1.15;text-align:center;letter-spacing:-.03em}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px}
+@media (max-width:860px){.pillars{grid-template-columns:1fr;margin-top:32px}}
+.pillar{padding:26px 24px}
+.pillar .n{color:var(--green);font-size:12px}
+.pillar h3{font-size:20px;margin:8px 0 8px}
+.pillar p{color:var(--ink2);font-size:13.5px}
+.chip{display:inline-block;margin-top:18px;padding:2px 9px;border:1px solid currentColor;border-radius:2px;font-size:11.5px}
+.who{margin-top:36px;text-align:center;color:var(--dim);font-size:13px;line-height:2}
+.who b{color:var(--ink);font-weight:400}
+.who span{color:var(--faint)}
+.who b{white-space:nowrap}
+.cta{margin-top:40px;border-color:var(--gline);background:var(--gbg);display:flex;align-items:center;gap:24px;padding:26px 28px;flex-wrap:wrap}
+.cta h3{font-size:20px}
+.cta p{color:var(--ink2);font-size:13px;margin-top:4px}
+.cta .grow{min-width:10px}
+.cta small{display:block;color:var(--dim);font-size:11.5px;margin-top:8px}
+@media (max-width:600px){.cta{padding:22px 20px}.cta .grow{display:none}}
+
+.status{position:fixed;left:0;right:0;bottom:0;z-index:20;height:24px;display:flex;align-items:center;gap:16px;padding:0 12px;background:var(--sbg);color:var(--gink);font-size:11px;border-top:1px solid var(--sline);white-space:nowrap;overflow:hidden}
+.status .mode{background:var(--green);color:var(--on-green);font-weight:700;padding:0 8px;margin-left:-12px;height:100%;display:flex;align-items:center}
+@media (max-width:700px){.status .hm{display:none}}
+@media (prefers-reduced-motion:reduce){.caret,.scroll-hint,.fade,.in-l,.in-r,.offline .pulse,.tabs button.on.run::after{animation:none}html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 
 <header class="top">
   <div class="wrap top-in">
-    <a href="#" class="logo">◢ citeairgap <span>v0.1</span></a>
-    <nav class="navl">
-      <a href="#how">how_it_works</a>
-      <a href="#industries">industries</a>
-      <a href="#security">security</a>
-      <a href="#deploy">deploy</a>
-      <a href="#faq">faq</a>
-    </nav>
+    <span class="logo">◢ citeairgap <span>v0.1</span></span>
     <span class="grow"></span>
-    <span class="stat"><i></i>egress <b>blocked</b></span>
-    <span class="stat"><i></i>audit <b>intact</b></span>
-    <button type="button" class="theme" id="theme" aria-label="Toggle light or dark theme" title="toggle theme"><span class="tn">☾<span class="lbl"> night</span></span><span class="tl">☀<span class="lbl"> light</span></span></button>
+    <span class="stat"><i></i>internet <b>not required</b></span>
+    <button type="button" class="theme" id="theme" aria-label="Toggle light or dark theme"><span class="tn">☾<span class="lbl"> night</span></span><span class="tl">☀<span class="lbl"> light</span></span></button>
     <a href="#contact" class="btn pri">book demo ⏎</a>
   </div>
 </header>
 
-<header class="hero">
-  <div class="wrap hero-grid">
-    <div class="rv">
-      <div class="sect">on-prem ai appliance · zero network egress</div>
-      <div class="ascii" aria-hidden="true">  ___ _ _       _   _       ___
- / __(_) |_ ___/_\ (_)_ _  / __|__ _ _ __
-| (__| |  _/ -_) _ \| | '_|| (_ / _` | '_ \
- \___|_|\__\___/_/ \_\_|_|  \___\__,_| .__/
-                                     |_|   </div>
-      <h1>AI answers from your documents, <span class="g">with proof.</span></h1>
-      <p class="lead">A private AI assistant for teams that can't afford a wrong answer. It answers from your own policies, procedures and contracts, checks every claim against the source text, and runs entirely inside your network.</p>
+<!-- ── screen 1 ── -->
+<section class="screen">
+  <div class="wrap hero">
+    <div>
+      <span class="offline"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8M5 12.5a10 10 0 0 1 5.2-2.7M16.8 10.7a10 10 0 0 1 2.2 1.8M8.5 16a5 5 0 0 1 7 0M12 20h.01M3 3l18 18"/></svg>works 100% offline<span class="more"> · no internet needed</span></span>
+      <h1>Ask your documents. <span class="g">Get answers you can prove.</span></h1>
+      <p class="sub">AI that runs on your own machine, <b>with no internet connection</b>, and only says what your documents say. Every claim is checked against the source and cited.</p>
       <div class="ctas">
         <a href="#contact" class="btn pri">see it on your documents →</a>
-        <a href="#how" class="btn">$ how --verify</a>
+        <a href="#why" class="btn">how it works ↓</a>
       </div>
-      <p class="note"><b>no cloud account</b> · <b>no data leaves the building</b> · <b>runs on one machine</b></p>
     </div>
-
-    <div class="win con rv">
-      <div class="con-bar">
-        <span class="logo">◢ console</span>
-        <span class="grow" style="flex:1"></span>
-        <span class="stat"><i></i>model <b>local</b></span>
-        <span class="stat"><i></i>egress <b>blocked</b></span>
+    <div>
+      <div class="stage">
+        <button type="button" class="nav prev" id="prev" aria-label="Previous example">‹</button>
+        <div class="win con" role="region" aria-roledescription="carousel" aria-label="Live examples">
+          <div class="bar"><span class="logo">◢ console</span><span class="counter" id="counter">1 / 3</span><span class="grow"></span><span class="stat"><i></i>network <b>none</b></span><span class="stat m"><i></i>model <b>local</b></span></div>
+          <div id="out" aria-live="polite"></div>
+          <div class="prompt"><label>you@airgap<span>:~$</span></label><span class="typed" id="typed"></span><span class="caret"></span></div>
+        </div>
+        <button type="button" class="nav next" id="next" aria-label="Next example">›</button>
       </div>
-      <div id="out" aria-live="polite"></div>
-      <div class="chips" id="chips"><span>try:</span></div>
-      <div class="prompt"><label>auditor@airgap<span>:~$</span></label><span class="typed" id="typed"></span><span class="caret"></span></div>
+      <div class="tabs" id="tabs"></div>
+      <div class="hint"><span class="desk">click ‹ › or use ← → keys to switch examples</span><span class="mob">← swipe the console to switch examples →</span></div>
     </div>
   </div>
-</header>
+  <a href="#why" class="scroll-hint">scroll ↓</a>
+</section>
 
-<div class="strip">
-  <div class="wrap strip-in">
-    <div><b>0 bytes</b><span>sent outside your network</span></div>
-    <div><b>3 checks</b><span>on every claim before you see it</span></div>
-    <div><b>exact span</b><span>cited for every sentence</span></div>
-    <div><b>hash-chained</b><span>audit trail, SIEM-ready</span></div>
-  </div>
-</div>
-
-<section>
+<!-- ── screen 2 ── -->
+<section class="screen s2" id="why">
   <div class="wrap">
-    <div class="head rv">
-      <div class="sect">why not a general-purpose assistant</div>
-      <h2>General AI assistants are excellent for drafting and research. Regulated answers need something different: <span class="g">proof, and data that never leaves.</span></h2>
-    </div>
-    <div class="two">
-      <div class="win rv">
-        <div class="ptitle">general_ai_assistant <span class="rt a">great tool · different job</span></div>
-        <div class="wbody">
-          <ul class="log x">
-            <li><span><span class="g">Strong</span> at writing, summarising and reasoning across broad topics</span></li>
-            <li>Citations are usually at document or page level, so a reviewer still has to find the exact wording</li>
-            <li>Usually cloud-hosted. Documents classified Confidential or above often can't be sent to it</li>
-            <li>Built to be helpful, so it may fill a gap with general knowledge where your policy is silent</li>
-            <li>Usage logs live with the vendor, not in your own tamper-evident audit trail</li>
-          </ul>
-        </div>
-      </div>
-      <div class="win good rv">
-        <div class="ptitle">citeairgap <span class="rt g">built for compliance answers</span></div>
-        <div class="wbody">
-          <ul class="log o">
-            <li>Answers only from your corpus. Every claim must match the source text, or it is removed</li>
-            <li>Cites the exact clause, character range and file hash, so a reviewer can check it in seconds</li>
-            <li>Model runs on your own hardware, with no outbound connections</li>
-            <li>Says "not found" when your documents don't answer the question</li>
-            <li>Hash-chained audit log stays in-house and exports to your SIEM</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    <h2>Three things a chatbot <span class="g">can't promise.</span></h2>
 
-<section id="how" style="padding-top:0">
-  <div class="wrap">
-    <div class="head rv">
-      <div class="sect">how it works</div>
-      <h2>The AI drafts. <span class="g">Deterministic checks decide what you see.</span></h2>
-      <p>A local language model writes a draft. It never gets the final say. Each claim has to carry a verbatim quote that the system can find in your documents. Any claim that fails is removed before the answer reaches you, and the removal is logged.</p>
+    <div class="pillars">
+      <div class="win pillar">
+        <span class="n">01 / offline</span>
+        <h3>No internet needed</h3>
+        <p>Runs entirely on your own hardware. No cloud, no connection, nothing leaves the building.</p>
+        <span class="chip g">network → none</span>
+      </div>
+      <div class="win pillar">
+        <span class="n">02 / verified</span>
+        <h3>Nothing made up</h3>
+        <p>Every claim must match your source text. If it doesn't, it's removed.</p>
+        <span class="chip" style="color:var(--red)">unsupported → removed</span>
+      </div>
+      <div class="win pillar">
+        <span class="n">03 / provable</span>
+        <h3>Everything traceable</h3>
+        <p>Each answer cites the exact clause and is written to a tamper-evident log.</p>
+        <span class="chip" style="color:var(--cyan)">§12.2 · sha256 ✓</span>
+      </div>
     </div>
 
-    <div class="pipe rv">
-      <div class="stage"><span class="n">01</span><h3>retrieve</h3><p>Finds the relevant clauses across your document library.</p></div>
-      <div class="stage"><span class="n">02</span><h3>answer</h3><p>A local model drafts short claims, each with a source and a verbatim quote.</p></div>
-      <div class="stage key"><span class="n">03</span><h3>verify</h3><p>Three independent checks per claim. Unsupported claims are dropped.</p></div>
-      <div class="stage"><span class="n">04</span><h3>cite</h3><p>Document · clause · char offsets · file SHA-256.</p></div>
-      <div class="stage"><span class="n">05</span><h3>audit</h3><p>Questions, answers and rejections go to a tamper-evident log.</p></div>
-    </div>
+    <p class="who">for teams working with <b>quality</b> <span>·</span> <b>pharma</b> <span>·</span> <b>finance</b> <span>·</span> <b>legal</b> <span>·</span> <b>defense</b> <span>·</span> <b>healthcare</b> <span>·</span> <b>energy</b> <span>·</span> <b>insurance</b></p>
 
-    <div class="checks">
-      <div class="win rv">
-        <div class="ptitle">check_1 · span</div>
-        <div class="wbody">
-          <h3>The quote must exist</h3>
-          <p>The cited text has to appear in the source document, either exactly or as a very close match.</p>
-          <div class="ex"><span class="tag t-bad">REJECTED</span> <span class="r">quote not found in any source</span></div>
-        </div>
+    <div class="win cta" id="contact">
+      <div>
+        <h3>See it answer <span class="g">your</span> questions.</h3>
+        <p>30-minute live demo on your documents, with the network cable unplugged.</p>
       </div>
-      <div class="win rv">
-        <div class="ptitle">check_2 · numbers</div>
-        <div class="wbody">
-          <h3>Every figure must match</h3>
-          <p>Each number, date, limit and duration in the claim has to appear in the cited span.</p>
-          <div class="ex"><span class="tag t-bad">REJECTED</span> <span class="r">numbers not in cited span: 60</span></div>
-        </div>
-      </div>
-      <div class="win rv">
-        <div class="ptitle">check_3 · meaning</div>
-        <div class="wbody">
-          <h3>The quote must support the claim</h3>
-          <p>A separate review sees only the claim and the quote, and rejects claims that add conditions or contradict the source.</p>
-          <div class="ex"><span class="tag t-ok">VERIFIED</span> <span class="g">quote directly states the claim</span></div>
-        </div>
+      <span class="grow"></span>
+      <div>
+        <a class="btn pri" href="mailto:stefan.neymark@gmail.com?subject=CiteAirgap%20demo%20request">book a demo ⏎</a>
+        <small>stefan.neymark@gmail.com</small>
       </div>
     </div>
   </div>
 </section>
 
-<section id="industries" style="padding-top:0">
-  <div class="wrap">
-    <div class="head rv">
-      <div class="sect">industries</div>
-      <h2>Built for organisations where documents carry consequences.</h2>
-      <p>If your people need answers from controlled documents, and a wrong or leaked answer has a real cost, CiteAirgap fits.</p>
-    </div>
-    <div class="win rv">
-      <div class="ptitle">explorer <span class="rt" id="indPath">sectors/manufacturing</span></div>
-      <div class="ind">
-        <div class="ind-list" id="indList"></div>
-        <div class="ind-pane" id="indPane"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="security" style="padding-top:0">
-  <div class="wrap">
-    <div class="head rv">
-      <div class="sect">security &amp; trust</div>
-      <h2>Designed to pass your security review, not work around it.</h2>
-    </div>
-    <div class="feat">
-      <div class="win rv"><div class="ptitle">egress_guard</div><div class="wbody"><h3>Air-gapped by design</h3><p>The model and the application run on your hardware. Outbound connections are blocked, so it keeps working on an isolated network.</p><span class="badge g">1.1.1.1:443 → blocked</span></div></div>
-      <div class="win rv"><div class="ptitle">audit_chain</div><div class="wbody"><h3>Tamper-evident audit log</h3><p>Every question, answer and rejected claim is written to a SHA-256 hash-chained log. If any entry is edited or deleted, the chain breaks and shows it.</p><span class="badge g">chain intact · 1,284 entries</span></div></div>
-      <div class="win rv"><div class="ptitle">siem_export</div><div class="wbody"><h3>Straight to your SIEM</h3><p>Export audit events in CEF format to Splunk, QRadar, Sentinel or any SIEM that ingests CEF.</p><span class="badge c">CEF:0|CiteAirgap|…</span></div></div>
-      <div class="win rv"><div class="ptitle">memory</div><div class="wbody"><h3>Encrypted case memory</h3><p>Multi-turn investigations remember earlier findings, and that memory is encrypted at rest. Keys can be sealed to TPM or HSM hardware.</p><span class="badge a">gAAAAABn3x…ciphertext</span></div></div>
-      <div class="win rv"><div class="ptitle">refusal</div><div class="wbody"><h3>Says "not found"</h3><p>If no claim survives verification, the answer is "not found in your documents". It won't fill the gap with general knowledge.</p><span class="badge r">not found in the corpus</span></div></div>
-      <div class="win rv"><div class="ptitle">model</div><div class="wbody"><h3>Your choice of model</h3><p>Works with open-weight models sized to your hardware. Upgrade or swap models offline, with no vendor lock-in.</p><span class="badge v">local · quantized · swappable</span></div></div>
-    </div>
-  </div>
-</section>
-
-<section id="deploy" style="padding-top:0">
-  <div class="wrap">
-    <div class="head rv">
-      <div class="sect">deployment</div>
-      <h2>From one laptop to a fully isolated network.</h2>
-      <p>Start with a contained pilot, then scale to the environment your data classification requires.</p>
-    </div>
-    <div class="dep">
-      <div class="win rv"><div class="ptitle">evaluate</div><div class="wbody"><h3>Single workstation</h3><p>Runs on one machine with a local model. Good for proving value on a real document set.</p><ul><li>Set up in a day</li><li>No IT integration required</li><li>Offline from the start</li></ul></div></div>
-      <div class="win hl rv"><div class="ptitle">department <span class="rt g">most common</span></div><div class="wbody"><h3>On-premise server</h3><p>A shared appliance on your internal network for a team or business unit.</p><ul><li>GPU sized to your workload</li><li>SIEM and directory integration</li><li>Larger models, faster answers</li></ul></div></div>
-      <div class="win rv"><div class="ptitle">classified</div><div class="wbody"><h3>Isolated network</h3><p>For OT, defense and other high-classification environments with no route to the internet.</p><ul><li>No default route, host firewall</li><li>Hardware-sealed keys</li><li>Signed offline model updates</li></ul></div></div>
-    </div>
-
-    <div class="win rv" style="margin-top:16px">
-      <div class="ptitle">pilot.trace <span class="rt">~4 weeks</span></div>
-      <div class="wbody" style="padding-top:8px;padding-bottom:8px">
-        <ul class="trace">
-          <li><span class="t">week 1</span><span class="a">scope</span><span class="dd">Choose a document set and 20–50 real questions your team asks today.</span></li>
-          <li><span class="t">week 2</span><span class="a">install</span><span class="dd">Deploy on your hardware, inside your network, and load your documents.</span></li>
-          <li><span class="t">weeks 3–4</span><span class="a">measure</span><span class="dd">Your experts score the answers for accuracy, citation quality and refusals.</span></li>
-          <li><span class="t">decision</span><span class="a">review</span><span class="dd">Review the results and the audit trail, then decide on rollout.</span></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="faq" style="padding-top:0">
-  <div class="wrap faq">
-    <div class="head rv" style="margin:0">
-      <div class="sect">faq</div>
-      <h2>Questions we hear from security, legal and IT.</h2>
-    </div>
-    <div class="rv">
-      <details open><summary>Does any data leave our network?</summary><p>No. The language model, the search index, the documents and the logs all stay on your hardware. The application blocks outbound connections, and in production that is backed by host firewall rules and a network with no route to the internet.</p></details>
-      <details><summary>Can it still hallucinate?</summary><p>The model can still draft an incorrect claim. What changes is that the claim won't reach you unsupported. Each one has to quote your documents and pass span, number and meaning checks. Claims that fail are removed and logged, and you can see what was rejected and why.</p></details>
-      <details><summary>What kinds of documents does it work with?</summary><p>Policies, procedures, contracts, standards, regulations and internal guidelines: any controlled text your people need answers from. We scope formats, languages and volume with you during the pilot.</p></details>
-      <details><summary>What hardware do we need?</summary><p>A pilot runs on a single modern laptop or workstation. Department deployments usually use an on-premise server with a GPU, sized to the number of users and documents.</p></details>
-      <details><summary>How do auditors check an answer?</summary><p>Every citation includes the document ID, clause, character offsets and a SHA-256 hash of the source file, so anyone can open the original and confirm the exact text. The audit log is hash-chained and can be exported to your SIEM.</p></details>
-      <details><summary>Does it replace our experts?</summary><p>No. It gives them the right clause in seconds, with proof, so decisions stay with people and stay traceable.</p></details>
-    </div>
-  </div>
-</section>
-
-<section id="contact" class="cta" style="padding-top:0">
-  <div class="wrap">
-    <div class="win good rv">
-      <div class="ptitle">book_demo</div>
-      <div class="wbody">
-        <div>
-          <div class="sect">next step</div>
-          <h2>See CiteAirgap answer questions from <span class="g">your own documents.</span></h2>
-          <p>A 30-minute live demo, fully offline. Bring a question your team struggles with and watch it get answered, cited and verified, or honestly refused.</p>
-        </div>
-        <div class="acts">
-          <a class="btn pri" href="mailto:stefan.neymark@gmail.com?subject=CiteAirgap%20demo%20request">book a demo ⏎</a>
-          <a class="btn" href="mailto:stefan.neymark@gmail.com?subject=CiteAirgap%20pilot">$ discuss --pilot</a>
-          <small>// usually a reply within one business day</small>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="wrap foot">
-    <span class="g">◢ citeairgap</span>
-    <span>private, verifiable AI for regulated teams</span>
-    <span style="flex:1"></span>
-    <a href="mailto:stefan.neymark@gmail.com">stefan.neymark@gmail.com</a>
-    <span>© <span id="yr">2026</span></span>
-  </div>
-</section>
-
-<div class="status">
-  <span class="mode">OFFLINE</span>
-  <span class="hide-m">pipeline retrieve → answer → verify → cite → audit</span>
-  <span class="grow"></span>
-  <span id="sLast">idle</span>
-</div>
+<div class="status"><span class="mode">OFFLINE</span><span class="hm">retrieve → answer → verify → cite → audit</span><span class="grow"></span><span id="sLast">idle</span></div>
 
 <script>
-document.documentElement.classList.add("js");
 (function(){
   var $=function(s){return document.querySelector(s)};
-  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  $('#yr').textContent=new Date().getFullYear();
   var root=document.documentElement,tb=$('#theme');
-  function setTheme(t){if(t==='light')root.setAttribute('data-theme','light');else root.removeAttribute('data-theme');tb.setAttribute('aria-pressed',t==='light');try{localStorage.setItem('citeairgap-theme',t)}catch(e){}}
-  tb.setAttribute('aria-pressed',root.getAttribute('data-theme')==='light');
-  tb.onclick=function(){setTheme(root.getAttribute('data-theme')==='light'?'dark':'light')};
+  tb.onclick=function(){var l=root.getAttribute('data-theme')!=='light';if(l)root.setAttribute('data-theme','light');else root.removeAttribute('data-theme');try{localStorage.setItem('citeairgap-theme',l?'light':'dark')}catch(e){}};
 
-  /* ── hero console scenarios ── */
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   var S=[
-    {k:'cited answer',q:"How often must torque wrenches be calibrated?",
-     meta:'retrieved 6 clauses · 1 claim drafted · 1 verified · 0 rejected · 1.8s',
-     html:'<div class="claim"><span class="tag t-ok">VERIFIED</span><div><div class="ct"><span class="v">[1]</span> Torque wrenches must be calibrated every 6 months or after 5,000 cycles, whichever comes first.</div><div class="cite">↳ SOP-QA-014 §4.1 · chars 1204–1293</div><div class="chk">span <b>exact</b> · numbers <b>6, 5,000 ✓</b> · entailment <b>✓</b></div></div></div>'+
-       '<div class="span">## 4. Calibration intervals<br>4.1 <mark>Torque wrenches shall be calibrated every 6 months or after 5,000 cycles, whichever comes first.</mark><span class="h">sha256 3e7a1c09d24f8b6e5a0c…91f2ab</span></div>'},
-    {k:'hallucination caught',q:"Is the supplier's liability capped for confidentiality breaches?",
-     meta:'retrieved 6 clauses · 2 claims drafted · 1 verified · 1 rejected · 2.4s',
-     html:'<div class="claim"><span class="tag t-ok">VERIFIED</span><div><div class="ct"><span class="v">[1]</span> No. The liability cap does not apply to breaches of confidentiality or to gross negligence.</div><div class="cite">↳ CTR-2025-118 §12.2 · chars 1482–1571</div><div class="chk">span <b>exact</b> · numbers <b>12.1 ✓</b> · entailment <b>✓</b></div></div></div>'+
-       '<div class="claim rej"><span class="tag t-bad">REJECTED</span><div><div class="ct">Liability is limited to 12 months of fees in all cases.</div><div class="why">✕ verifier: contradicted by §12.2. dropped and logged</div></div></div>'+
-       '<div class="span">12.2 <mark>The limitation in 12.1 does not apply to breach of section 9 (Confidentiality) or to gross negligence.</mark><span class="h">sha256 9f2c41e07ab3d55c8e1a…b04d7e</span></div>'},
-    {k:'honest refusal',q:"What is the parental leave policy?",
-     meta:'retrieved 6 clauses · 0 claims survived verification · 1.1s',
-     html:'<div class="refusal">Not found in the corpus. No source supports an answer, so none is given.</div><div class="chk" style="margin-top:8px">// no guess, no general knowledge. refusal written to audit log <span class="v">#1285</span></div>'},
-    {k:'air-gap',q:"egress test 1.1.1.1:443",
-     meta:'socket.connect → outbound attempt',
-     html:'<div class="refusal">PermissionError: CiteAirgap egress guard: outbound connection to (\'1.1.1.1\', 443) blocked</div><div class="chk" style="margin-top:8px">blocked attempts <b>1</b> · allowed <b>127.0.0.1 only</b></div>'}
+    {k:'verified answer',q:"How often must torque wrenches be calibrated?",meta:'1 claim · verified against the source',
+     html:'<div class="claim"><span class="tag t-ok">VERIFIED</span><div><div>Every 6 months or after 5,000 cycles, whichever comes first.</div><div class="cite">↳ SOP-QA-014 §4.1 · exact quote found</div></div></div>'+
+          '<div class="span">4.1 <mark>Torque wrenches shall be calibrated every 6 months or after 5,000 cycles, whichever comes first.</mark><span class="h">source: SOP-QA-014_calibration.md · sha256 3e7a1c…91f2ab</span></div>'},
+    {k:'made-up claim removed',q:"Is the supplier's liability capped for confidentiality breaches?",meta:'2 claims drafted · 1 verified · 1 removed',
+     html:'<div class="claim"><span class="tag t-ok">VERIFIED</span><div><div>No. The cap does not apply to confidentiality breaches.</div><div class="cite">↳ CTR-2025-118 §12.2</div></div></div>'+
+          '<div class="claim rej"><span class="tag t-bad">REMOVED</span><div><div class="ct">Liability is capped at 12 months of fees in all cases.</div><div class="why">✕ contradicts §12.2, so it never reaches you</div></div></div>'+
+          '<div class="span">12.2 <mark>The limitation in 12.1 does not apply to breach of section 9 (Confidentiality) or to gross negligence.</mark></div>'},
+    {k:'honest "not found"',q:"What is the parental leave policy?",meta:'0 claims supported by your documents',
+     html:'<div class="refusal">Not found in your documents.</div><div class="meta">no guessing, no outside knowledge. the refusal is logged too.</div>'}
   ];
-  var out=$('#out'),typed=$('#typed'),chips=$('#chips'),sLast=$('#sLast'),cur=0,timer=null,auto=true;
-  S.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=s.k;b.onclick=function(){auto=false;run(i)};chips.appendChild(b)});
+  var DUR=8000;
+  var out=$('#out'),typed=$('#typed'),tabs=$('#tabs'),sLast=$('#sLast'),counter=$('#counter'),cur=0,timer=null,auto=true;
+  S.forEach(function(s,i){var b=document.createElement('button');b.type='button';b.textContent=s.k;b.onclick=function(){go(i,true)};tabs.appendChild(b)});
+  tabs.style.setProperty('--dur',DUR+'ms');
   function esc(t){return t.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-  function setChip(i){[].forEach.call(chips.querySelectorAll('button'),function(b,j){b.classList.toggle('on',j===i)})}
-  function render(s){
-    out.innerHTML='<div class="fade"><div class="q"><span class="ps">›</span> '+esc(s.q)+'</div><div class="meta">'+s.meta+'</div>'+s.html+'</div>';
-    typed.textContent='';sLast.textContent='last run: '+s.k+' · ok';
+  function mark(i,running){[].forEach.call(tabs.children,function(b,j){b.classList.toggle('on',j===i);b.classList.remove('run')});
+    if(running){var b=tabs.children[i];void b.offsetWidth;b.classList.add('run')}}
+  function render(s,dir){out.innerHTML='<div class="'+(dir>0?'in-r':dir<0?'in-l':'fade')+'"><div class="q"><span class="ps">›</span> '+esc(s.q)+'</div><div class="meta">'+s.meta+'</div>'+s.html+'</div>';typed.textContent='';sLast.textContent='last answer: '+s.k}
+  function schedule(){clearTimeout(timer);if(auto){mark(cur,true);timer=setTimeout(function(){run((cur+1)%S.length,0,false)},DUR)}else mark(cur,false)}
+  // user navigation: show result instantly with a slide, stop autoplay
+  function go(i,user,dir){
+    i=(i+S.length)%S.length;
+    if(user)auto=false;
+    if(dir===undefined)dir=i>cur?1:i<cur?-1:0;
+    clearTimeout(timer);cur=i;counter.textContent=(i+1)+' / '+S.length;
+    render(S[i],dir);schedule();
   }
+  // autoplay: type the question first, then answer
   function run(i){
-    clearTimeout(timer);cur=i;setChip(i);var s=S[i];
-    if(reduce){render(s);schedule();return}
-    out.innerHTML='<div class="meta" style="margin-top:0">ready. waiting for query…</div>';
-    sLast.textContent='running';
-    var n=0;(function type(){
-      typed.textContent=s.q.slice(0,++n);
-      if(n<s.q.length){timer=setTimeout(type,22+Math.random()*30)}
-      else{timer=setTimeout(function(){
-        out.innerHTML='<div class="meta" style="margin-top:0">retrieve → answer → verify → cite → audit …</div>';
-        timer=setTimeout(function(){render(s);schedule()},650)},250)}
-    })();
+    clearTimeout(timer);cur=i;counter.textContent=(i+1)+' / '+S.length;mark(i,false);
+    var s=S[i];
+    if(reduce){render(s,0);schedule();return}
+    out.innerHTML='<div class="meta" style="margin:0">ready.</div>';sLast.textContent='thinking…';
+    var n=0;(function type(){if(!auto)return;typed.textContent=s.q.slice(0,++n);
+      if(n<s.q.length)timer=setTimeout(type,20+Math.random()*26);
+      else timer=setTimeout(function(){out.innerHTML='<div class="meta" style="margin:0">checking every claim against the source…</div>';timer=setTimeout(function(){render(s,0);schedule()},650)},220)})();
   }
-  function schedule(){if(auto)timer=setTimeout(function(){run((cur+1)%S.length)},6500)}
+  $('#prev').onclick=function(){go(cur-1,true,-1)};
+  $('#next').onclick=function(){go(cur+1,true,1)};
+  document.addEventListener('keydown',function(e){
+    if(e.target.closest&&e.target.closest('input,textarea'))return;
+    var r=out.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight)return;
+    if(e.key==='ArrowRight'){go(cur+1,true,1)}else if(e.key==='ArrowLeft'){go(cur-1,true,-1)}});
+  var x0=null,y0=null;
+  out.addEventListener('pointerdown',function(e){x0=e.clientX;y0=e.clientY});
+  out.addEventListener('pointerup',function(e){if(x0===null)return;var dx=e.clientX-x0,dy=e.clientY-y0;x0=null;
+    if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){dx<0?go(cur+1,true,1):go(cur-1,true,-1)}});
   run(0);
-
-  /* ── industries explorer ── */
-  var I=[
-    {id:'manufacturing',ic:'⚙',n:'Manufacturing & Quality',d:'Shop-floor teams and QA engineers get the exact clause from SOPs and work instructions without digging through binders or the QMS.',docs:'SOPs, work instructions, ISO 9001 / AS9100 procedures, NCRs',who:'QA engineers, line supervisors, auditors',q:['How often must torque wrenches be calibrated?','What happens if a gauge is found out of tolerance?']},
-    {id:'pharma',ic:'⚗',n:'Pharma & Life Sciences',d:'Traceable answers from GMP-controlled documents, with an audit trail that inspectors can follow.',docs:'GMP procedures, validation protocols, batch records, CAPA',who:'QA/QC, validation, regulatory affairs',q:['What is the deviation escalation timeline?','Which steps require second-person verification?']},
-    {id:'finance',ic:'$',n:'Banking & Finance',d:'Compliance and risk teams query policy and regulation without sending customer or internal data to an external AI.',docs:'Credit policy, AML/KYC procedures, regulatory circulars',who:'Compliance officers, risk, internal audit',q:['When is enhanced due diligence required?','What is the approval limit for a branch manager?']},
-    {id:'legal',ic:'§',n:'Legal & Contracts',d:'Clause-level answers across contract portfolios, cited to the exact wording that a lawyer can check in seconds.',docs:'Master agreements, NDAs, supplier contracts, legal policy',who:'In-house counsel, procurement, contract managers',q:["Is the supplier's liability capped for confidentiality breaches?",'How much notice is required to terminate for convenience?']},
-    {id:'defense',ic:'◈',n:'Defense & Government',d:'Runs on classified or isolated networks with no route to the internet and no external dependencies.',docs:'Security directives, classified handling rules, procurement regulations',who:'Security officers, program managers, procurement',q:['Who approves removable-media exceptions?','How must media entering the OT network be handled?']},
-    {id:'healthcare',ic:'+',n:'Healthcare',d:'Clinical and administrative staff find protocol answers while patient data stays on hospital infrastructure.',docs:'Clinical protocols, patient-data policy, accreditation standards',who:'Clinical governance, quality, DPOs',q:['How long must patient consent forms be kept?','Who may access records of a discharged patient?']},
-    {id:'energy',ic:'⚡',n:'Energy & Utilities',d:'Built for OT environments, where connectivity is restricted and procedures are safety-critical.',docs:'OT security baselines, safety procedures, permits to work',who:'OT security, operations, HSE',q:["What's the screen-lock limit on the OT network?",'When is a compensating control required for an unpatched endpoint?']},
-    {id:'insurance',ic:'≡',n:'Insurance & Audit',d:'Consistent answers from policy wordings and control frameworks, where every answer can be traced.',docs:'Policy wordings, underwriting guides, internal control frameworks',who:'Underwriters, claims, internal audit',q:['Which exclusions apply to flood damage?','How long must audit evidence be retained?']}
-  ];
-  var list=$('#indList'),pane=$('#indPane'),path=$('#indPath');
-  function showInd(i){
-    var x=I[i];
-    [].forEach.call(list.children,function(b,j){b.classList.toggle('on',j===i)});
-    path.textContent='sectors/'+x.id;
-    pane.innerHTML='<div class="fade"><h3>'+esc(x.n)+'</h3><p>'+esc(x.d)+'</p>'+
-      '<dl class="kv"><dt>documents</dt><dd>'+esc(x.docs)+'</dd><dt>used by</dt><dd>'+esc(x.who)+'</dd><dt>deployment</dt><dd class="g">on-prem · offline · audited</dd></dl>'+
-      '<ul class="ind-q">'+x.q.map(function(q){return '<li>'+esc(q)+'</li>'}).join('')+'</ul></div>';
-  }
-  I.forEach(function(x,i){var b=document.createElement('button');b.type='button';b.innerHTML='<span class="ic">'+x.ic+'</span>'+esc(x.n);b.onclick=function(){showInd(i)};list.appendChild(b)});
-  showInd(0);
-
-  /* ── reveal ── */
-  var els=document.querySelectorAll('.rv');
-  if(!('IntersectionObserver' in window)){[].forEach.call(els,function(e){e.classList.add('in')});return}
-  var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.1,rootMargin:'0px 0px -30px 0px'});
-  [].forEach.call(els,function(e){io.observe(e)});
 })();
 </script>
 </body>
